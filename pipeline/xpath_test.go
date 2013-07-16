@@ -31,4 +31,15 @@ func XPathSpec(c gs.Context) {
 		c.Expect(nodes[0], gs.Equals, "blah")
 		doc.Free()
 	})
+
+	c.Specify("XPath works on attribute nodes", func() {
+		doc, err := NewXMLDocument(xml_data)
+		c.Assume(err, gs.IsNil)
+		path := "//*[local-name()='deviceName']/@name"
+		nodes, err := doc.Find(path)
+		c.Assume(err, gs.IsNil)
+		c.Expect(len(nodes), gs.Equals, 1)
+		c.Expect(nodes[0], gs.Equals, "WIN-0DDABKC1UI8")
+		doc.Free()
+	})
 }
