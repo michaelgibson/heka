@@ -15,14 +15,38 @@
 package pipeline
 
 import (
-	"github.com/moovweb/gokogiri"
+	"github.com/crankycoder/gokogiri/xml"
 )
 
-func run() {
-    defer CheckXmlMemoryLeaks(t)
-    e := Compile(`./*`)
-    if e == nil {
-        t.Error("expr should be good")
-    }
-    e.Free()
+type XMLDocument struct {
+	raw_xml string
+	doc     *xml.XmlDocument
+}
+
+func NewXMLDocument(raw_xml string) (x *XMLDocument, err error) {
+	x = &XMLDocument{raw_xml: raw_xml}
+
+	doc, err := xml.Parse([]byte(x.raw_xml), xml.DefaultEncodingBytes,
+		nil, xml.DefaultParseOption, xml.DefaultEncodingBytes)
+	if err != nil {
+		return
+	}
+	x.doc = doc
+	return
+}
+
+func (x *XMLDocument) Free() {
+	x.doc.Free()
+}
+
+func (x *XMLDocument) Find(xpath string) (result []string, err error) {
+	nodes, err := x.doc.Search(xpath)
+	if err != nil {
+		return
+	}
+	result = make([]string, len(nodes))
+	for i, node := range nodes {
+		result[i] = node.Content()
+	}
+    return
 }

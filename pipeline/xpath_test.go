@@ -14,3 +14,21 @@
 
 package pipeline
 
+import (
+	gs "github.com/rafrombrc/gospec/src/gospec"
+)
+
+func XPathSpec(c gs.Context) {
+	xml_data := "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"><SOAP-ENV:Body><m:setPresence xmlns:m=\"http://schemas.microsoft.com/winrtc/2002/11/sip\"><m:presentity m:uri=\"test\"><m:availability m:aggregate=\"300\" m:description=\"online\"/><m:activity m:aggregate=\"400\" m:description=\"Active\"/><textnode>blah</textnode><deviceName xmlns=\"http://schemas.microsoft.com/2002/09/sip/client/presence\" name=\"WIN-0DDABKC1UI8\"/></m:presentity></m:setPresence></SOAP-ENV:Body></SOAP-ENV:Envelope>"
+
+	c.Specify("XPath works on text nodes", func() {
+		doc, err := NewXMLDocument(xml_data)
+		c.Assume(err, gs.IsNil)
+		path := "//*[local-name()='textnode']"
+		nodes, err := doc.Find(path)
+		c.Assume(err, gs.IsNil)
+		c.Expect(len(nodes), gs.Equals, 1)
+		c.Expect(nodes[0], gs.Equals, "blah")
+		doc.Free()
+	})
+}
