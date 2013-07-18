@@ -104,6 +104,7 @@ func (p *PayloadXmlDecoder) match(s string) (captures map[string]string, err err
 	if err != nil {
 		return
 	}
+	defer xdoc.Free()
 
 	for capture_group, xpath := range p.XpathMap {
 		nodes, err := xdoc.Find(xpath)

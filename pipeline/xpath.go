@@ -26,8 +26,9 @@ type XMLDocument struct {
 func NewXMLDocument(raw_xml string) (x *XMLDocument, err error) {
 	x = &XMLDocument{raw_xml: raw_xml}
 
-	doc, err := xml.Parse([]byte(x.raw_xml), xml.DefaultEncodingBytes,
+	doc, err := xml.Parse([]byte(raw_xml), xml.DefaultEncodingBytes,
 		nil, xml.DefaultParseOption, xml.DefaultEncodingBytes)
+
 	if err != nil {
 		return
 	}
@@ -48,5 +49,5 @@ func (x *XMLDocument) Find(xpath string) (result []string, err error) {
 	for i, node := range nodes {
 		result[i] = node.Content()
 	}
-    return
+	return
 }
