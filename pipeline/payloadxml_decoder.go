@@ -16,8 +16,6 @@ package pipeline
 
 import (
 	"fmt"
-	. "github.com/mozilla-services/heka/message"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -126,34 +124,17 @@ func (p *PayloadXmlDecoder) Decode(pack *PipelinePack) (err error) {
 		return err
 	}
 
-	if timeStamp, ok := captures["Timestamp"]; ok {
-		val, err := ForgivingTimeParse(p.TimestampLayout, timeStamp, p.tzLocation)
-		if err != nil {
-			p.dRunner.LogError(fmt.Errorf("Don't recognize Timestamp: '%s'", timeStamp))
-		}
-		// If we only get a timestamp, use the current date
-		if val.Year() == 0 && val.Month() == 1 && val.Day() == 1 {
-			now := time.Now()
-			val = val.AddDate(now.Year(), int(now.Month()-1), now.Day()-1)
-		} else if val.Year() == 0 {
-			// If there's no year, use current year
-			val = val.AddDate(time.Now().Year(), 0, 0)
-		}
-		pack.Message.SetTimestamp(val.UnixNano())
-	} else if sevStr, ok := captures["Severity"]; ok {
-		// If so, see if we have a mapping for this severity.
-		if sevInt, ok := p.SeverityMap[sevStr]; ok {
-			pack.Message.SetSeverity(sevInt)
-		} else {
-			// No mapping => severity value should be an int.
-			sevInt, err := strconv.ParseInt(sevStr, 10, 32)
-			if err != nil {
-				p.dRunner.LogError(fmt.Errorf("Don't recognize severity: '%s'", sevStr))
-			} else {
-				pack.Message.SetSeverity(int32(sevInt))
-			}
-		}
+	gd := &GenericDecoder{
+		Captures:        captures,
+		dRunner:         p.dRunner,
+		TimestampLayout: p.TimestampLayout,
+		TzLocation:      p.tzLocation,
+		SeverityMap:     p.SeverityMap,
 	}
+
+	gd.DecodeTimestamp(pack)
+	gd.DecodeSeverity(pack)
+
 	// Update the new message fields based on the fields we should
 	// change and the capture parts
 	return p.MessageFields.PopulateMessage(pack.Message, captures)
