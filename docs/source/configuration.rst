@@ -334,6 +334,7 @@ Or if using a logline decoder to parse OSX syslog messages may look like:
     Type = "drop"
     Payload = ""
 
+
 .. _config_udp_input:
 
 UdpInput
@@ -679,6 +680,68 @@ Example (Parsing Apache Combined Log Format):
     RequestSize|B = "%RequestSize%"
     Referer = "%Referer%"
     Browser = "%Browser%"
+
+PayloadXmlDecoder
+-----------------
+
+This decoder plugin allows you to extract parts of an XML blob using
+XPath and map them into the `Field` attributes of a `Message`.  A
+subsection must be defined declaring a capture name and a matching
+XPath.  For any XPath that does not resolve to a valid node in the XML
+document, the capture_group will simply be left empty.
+
+Parameters:
+- xpath_map:
+    A subsection that defines capture names and XPath
+    expressions to extract text nodes and attribute nodes out of an
+    XML document.  XPath expressions are evaluated and the XML node
+    content is returned. Captured values can be used in the
+    message_fields section of `Common PayloadDecoder Options`_
+
+See `Common PayloadDecoder Options`_ for more options.
+
+.. _Common PayloadDecoder Options:
+
+Common PayloadDecoder Options
+-----------------------------
+
+- severity_map:
+    Subsection defining severity strings and the numerical value they should
+    be translated to. hekad uses numerical severity codes, so a severity of
+    `WARNING` can be translated to `3` by settings in this section.
+- message_fields:
+    Subsection defining message fields to populate and the interpolated values
+    that should be used. Valid interpolated values are any captured by the plugin
+    in the message_matcher, and any other field that exists in the message. In
+    the event that a captured name overlaps with a message field, the captured
+    name's value will be used. Optional representation metadata can be added at 
+    the end of the field name using a pipe delimiter i.e. ResponseSize|B  = 
+    "%ResponseSize%" will create Fields[ResponseSize] representing the number of
+    bytes.  Adding a representation string to a standard message header name
+    will cause it to be added as a user defined field i.e., Payload|json will
+    create Fields[Payload] with a json representation.
+
+    Interpolated values should be surrounded with `%` signs, for example::
+
+        [my_decoder.message_fields]
+        Type = "%Type%Decoded"
+
+    This will result in the new message's Type being set to the old messages
+    Type with `Decoded` appended.
+- timestamp_layout (string):
+    A formatting string instructing hekad how to turn a time string into the
+    actual time representation used internally. Example timestamp layouts can
+    be seen in `Go's time documetation <http://golang.org/pkg/time/#pkg-
+    constants>`_. Default Timestamp layout is ISO8601.
+- timestamp_location (string):
+    Time zone in which the timestamps in the text are presumed to be in.
+    Should be a location name corresponding to a file in the IANA Time Zone
+    database (e.g. "America/Los_Angeles"), as parsed by Go's
+    `time.LoadLocation()` function (see
+    http://golang.org/pkg/time/#LoadLocation). Defaults to "UTC". Not required
+    if valid time zone info is embedded in every parsed timestamp, since those
+    can be parsed as specified in the `timestamp_layout`.
+
 
 .. end-decoders
 
